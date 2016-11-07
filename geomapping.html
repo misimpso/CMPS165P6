@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+    .county-boundary {
+        fill: none;
+        stroke-linejoin: round;
+    }
+    
+    path {
+        stroke: black;
+        stroke-width: .5;
+    }
+    
+    .key {
+        fill: none;
+        stroke: black;
+    } 
+    .key text {
+        fill: black;
+        stroke: none;
+        font-family: Arial;
+        font-size: 10px
+    }
+</style>
+<body>
+    <h1 style="font-family:Arial">Colorado Population Per County 2014</h1>
+<script src="https://d3js.org/d3.v3.min.js"></script>
+<script src="https://d3js.org/topojson.v1.min.js"></script>
+<script>
+
+    var width = 960,
+        height = 1100;
+    
+    var svg = d3.select("body").append("svg")
+        .attr("width", width)
+        .attr("height", height);
+    
+    var color = d3.scale.threshold()
+        .range(["#fff7ec", "#fee8c8", "#fdd49e", "#fdbb84", "#fc8d59", "#ef6548", "#d7301f", "#b30000", "#7f0000"])
+        //.range(["#ccceff", "#bdbff3", "#aeb0e7", "#a0a1dc", "#9193d0", "#8384c4", "#7475b9", "#6667ad", "#5758a1", "#484996", "#3a3a8a", "#2b2c7e", "#1d1d73", "#0e0e67", "#00005c"])
+        .domain([1, 5000, 15000, 50000, 150000, 300000, 450000, 600000]);
+        //.domain([1, 2000, 5000, 10000, 15000, 30000, 50000, 100000, 150000, 200000, 300000, 450000, 600000, 700000]);
+    
+    var legend = d3.scale.linear()
+        .domain([0, 600500])
+        .range([0, 500]);
+    
+    var projection = d3.geo.albersUsa()
+        .scale(5000)
+        .translate([width + 100, height/3.5]);
+    
+    var path = d3.geo.path()
+        .projection(projection);
+
+    d3.json('cd.json', function(error, cd) {
+        if (error) return console.error(error);
+        
+        var yAxis = d3.svg.axis()
+            .scale(legend)
+            .orient('left')
+            .ticks(color.domain().length)
+            .tickValues(color.domain())
+            .tickFormat(function(d) { return d >= 5000 ? d: null });
+
+        var g = svg.append("g")
+            .attr('class', "key")
+            .attr("transform", "translate(80,30)");
+
+        g.selectAll('rect')
+            .data(color.range().map(function(d, i) {
+                return {
+                        y0: i ? legend(color.domain()[i - 1]): legend.range()[0],
+                        y1: i < color.domain().length ? legend(color.domain()[i]) : legend.range()[1],
+                        z: d
+                };
+            }))
+        .enter().append('rect')
+            .attr('width', 8)
+            .attr('y', function(d) { return d.y0; })
+            .attr('height', function(d) { return d.y1 - d.y0; })
+            .style('fill', function(d) { return d.z; });
+
+        g.call(yAxis).append('text')
+            .attr('class', 'caption')
+            .attr('y', -16)
+            .style('font-family', 'Arial')
+            .text('Population per County')
+            .attr("transform", "rotate(90)");
+
+        var populations = topojson.feature(cd, cd.objects.ACS1014_county);
+
+        svg.append("path")
+            .datum(populations)
+            .attr("d", path);
+
+        svg.selectAll('.county')
+            .data(topojson.feature(cd, cd.objects.ACS1014_county).features)
+            .enter().append("path")
+            .attr("class", function(d) { return "county-" + d.properties.NAME})
+            .attr("d", path)
+            .attr("fill", function(d) {
+                return color(d.properties.pop1014);
+            });
+
+        svg.append("path")
+            .datum(topojson.mesh(cd, cd.objects.ACS1014_county, function(a, b) { return a !== b; }))
+            .attr("d", path)
+            .attr("class", "county-boundary");
+    });
+</script>
