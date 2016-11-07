@@ -24,6 +24,12 @@
 </style>
 <body>
     <h1 style="font-family:Arial">Colorado Population Per County 2014</h1>
+    <svg id="map" width="960" height="960"></svg>
+    <p>Michael Simpson - misimpso <br>
+        https://github.com/misimpso/CMPS165P6 <br>
+        Instructor: Suresh Lodha <br>
+        CMPS 165: Data programming for Visualization <br>
+       Fall 2016</p>
 <script src="https://d3js.org/d3.v3.min.js"></script>
 <script src="https://d3js.org/topojson.v1.min.js"></script>
 <script>
@@ -31,9 +37,7 @@
     var width = 960,
         height = 1100;
     
-    var svg = d3.select("body").append("svg")
-        .attr("width", width)
-        .attr("height", height);
+    var svg = d3.select("svg");
     
     var color = d3.scale.threshold()
         .range(["#fff7ec", "#fee8c8", "#fdd49e", "#fdbb84", "#fc8d59", "#ef6548", "#d7301f", "#b30000", "#7f0000"])
